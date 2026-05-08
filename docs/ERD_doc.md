@@ -8,7 +8,7 @@
 
 users (1) <-> projects (N)
 
-한 명의 유저(leader_id)가 여러 개의 프로젝트를 생성하고 관리할 수 있습니다.
+한 명의 유저(leader_id)r가 여러 개의 프로젝트를 생성하고 관리할 수 있습니다.
 
 users (1) <-> notifications (N)
 
@@ -35,3 +35,5 @@ applications 테이블이 applicant_id와 project_id를 모두 가지고 있어,
 외래 키(FK) 명명 규칙: leader_id, applicant_id와 같이 단순히 user_id라고 하지 않고 그 역할(Role)을 명시하여 가독성을 높였습니다.
 
 데이터 타입: ID 필드에 bigint를 사용하여 대규모 확장을 대비했으며, 날짜 필드에 timestamp를 사용해 변경 이력을 추적할 수 있게 했습니다.
+
+![alt text](image.png)
