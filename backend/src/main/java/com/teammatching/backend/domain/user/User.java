@@ -3,6 +3,7 @@ package com.teammatching.backend.domain.user;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Builder;
 import java.time.LocalDateTime;
 import org.hibernate.annotations.CreationTimestamp;
 import java.util.ArrayList;
@@ -45,4 +46,11 @@ public class User {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Notification> notifications = new ArrayList<>();
+
+    @Builder
+    public User(String email, String password, String name) {
+        this.email = email;
+        this.password = password;
+        this.name = name;
+    }
 }
