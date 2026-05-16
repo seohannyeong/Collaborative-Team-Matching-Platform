@@ -4,6 +4,8 @@ import com.teammatching.backend.domain.user.dto.LoginRequest;
 import com.teammatching.backend.domain.user.dto.LoginResponse;
 import com.teammatching.backend.domain.user.dto.SignUpRequest;
 import com.teammatching.backend.global.jwt.JwtTokenProvider;
+import com.teammatching.backend.global.exception.BusinessException;
+import com.teammatching.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -25,7 +27,7 @@ public class UserService {
     @Transactional
     public Long signUp(SignUpRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException("Email is already in use.");
+            throw new BusinessException(ErrorCode.EMAIL_DUPLICATION);
         }
 
         User user = User.builder()
@@ -40,10 +42,10 @@ public class UserService {
     @Transactional
     public LoginResponse login(LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new IllegalArgumentException("Invalid email or password."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.LOGIN_FAILED));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new IllegalArgumentException("Invalid email or password.");
+            throw new BusinessException(ErrorCode.LOGIN_FAILED);
         }
 
         Authentication authentication = new UsernamePasswordAuthenticationToken(user.getEmail(), null, Collections.emptyList());
