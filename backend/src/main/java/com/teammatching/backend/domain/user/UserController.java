@@ -3,6 +3,9 @@ package com.teammatching.backend.domain.user;
 import com.teammatching.backend.domain.user.dto.LoginRequest;
 import com.teammatching.backend.domain.user.dto.LoginResponse;
 import com.teammatching.backend.domain.user.dto.SignUpRequest;
+
+import com.teammatching.backend.domain.user.dto.MeResponse;
+import org.springframework.security.core.Authentication;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -26,5 +29,15 @@ public class UserController {
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         LoginResponse response = userService.login(request);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<MeResponse> me(Authentication authentication) {
+
+        String email = authentication.getName();
+
+        return ResponseEntity.ok(
+                userService.me(email)
+        );
     }
 }

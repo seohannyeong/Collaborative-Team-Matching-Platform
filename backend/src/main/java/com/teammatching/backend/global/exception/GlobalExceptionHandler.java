@@ -5,10 +5,18 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    protected ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
+        log.warn("handleMethodArgumentNotValidException", e);
+        final ErrorResponse response = ErrorResponse.of(ErrorCode.INVALID_INPUT_VALUE);
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
 
     @ExceptionHandler(BusinessException.class)
     protected ResponseEntity<ErrorResponse> handleBusinessException(final BusinessException e) {

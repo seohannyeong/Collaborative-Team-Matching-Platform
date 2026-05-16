@@ -39,7 +39,7 @@ public class JwtTokenProvider {
         long now = (new Date()).getTime();
         Date validity = new Date(now + this.accessTokenValidityInMilliseconds);
 
-        return Jwts.builder().setSubject(authentication.getName()).claim(AUTHORITIES_KEY, authorities).setIssuedAt(new Date()).setExpiration(validity).signWith(key, SignatureAlgorithm.HS512).compact();
+        return Jwts.builder().setSubject(authentication.getName()).claim(AUTHORITIES_KEY, authorities).setIssuedAt(new Date()).setExpiration(validity).signWith(key, SignatureAlgorithm.HS256).compact();
     }
 
     public Authentication getAuthentication(String token) {

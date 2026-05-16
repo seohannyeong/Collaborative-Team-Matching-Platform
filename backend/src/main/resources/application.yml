@@ -19,6 +19,7 @@ spring:
         format_sql: true
         default_batch_fetch_size: 100
 
+# application.yml 예시 (테스트용으로 사용 가능한 512bit 이상의 Base64 문자열)
 jwt:
-  secret: dGhpc2lzYXZlcnlsb25nc2VjcmV0a2V5Zm9ydGVzdHB1cnBvc2Vzb25seWFuZHNob3VsZGJlY2hhbmdlZGlucHJvZHVjdGlvbg==
-  access-token-validity-in-seconds: 3600
+  secret: c3ByaW5nLWJvb3Qtand0LXR1dG9yaWFsLXNlY3JldC1rZXktc3ByaW5nLWJvb3Qtand0LXR1dG9yaWFsLXNlY3JldC1rZXk=
+  access-token-validity-in-seconds: 86400

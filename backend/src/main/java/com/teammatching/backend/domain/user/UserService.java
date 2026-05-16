@@ -6,6 +6,7 @@ import com.teammatching.backend.domain.user.dto.SignUpRequest;
 import com.teammatching.backend.global.jwt.JwtTokenProvider;
 import com.teammatching.backend.global.exception.BusinessException;
 import com.teammatching.backend.global.exception.ErrorCode;
+import com.teammatching.backend.domain.user.dto.MeResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -52,5 +53,17 @@ public class UserService {
         String token = jwtTokenProvider.createToken(authentication);
 
         return new LoginResponse(token);
+    }
+    public MeResponse me(String email) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        return new MeResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getName()
+        );
     }
 }
