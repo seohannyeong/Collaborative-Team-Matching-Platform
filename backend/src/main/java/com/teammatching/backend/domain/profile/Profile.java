@@ -4,11 +4,15 @@ import com.teammatching.backend.domain.user.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 
 @Entity
 @Table(name = "profiles")
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Profile {
 
     @Id
@@ -34,4 +38,11 @@ public class Profile {
     @Column(columnDefinition = "TEXT")
     private String collaborationStyle;
 
+    public void update(String interest, String techStack, String introduction, String githubUrl, String collaborationStyle) {
+        this.interest = interest;
+        this.techStack = techStack;
+        this.introduction = introduction;
+        this.githubUrl = githubUrl;
+        this.collaborationStyle = collaborationStyle;
+    }
 }

@@ -7,6 +7,8 @@ import com.teammatching.backend.global.jwt.JwtTokenProvider;
 import com.teammatching.backend.global.exception.BusinessException;
 import com.teammatching.backend.global.exception.ErrorCode;
 import com.teammatching.backend.domain.user.dto.MeResponse;
+import com.teammatching.backend.domain.profile.Profile;
+import com.teammatching.backend.domain.profile.ProfileRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -24,6 +26,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final ProfileRepository profileRepository;
 
     @Transactional
     public Long signUp(SignUpRequest request) {
@@ -37,7 +40,16 @@ public class UserService {
                 .name(request.getName())
                 .build();
 
-        return userRepository.save(user).getId();
+        User savedUser = userRepository.save(user);
+
+        Profile profile = Profile.builder()
+                .user(savedUser)
+                .interest("")
+                .techStack("")
+                .build();
+        profileRepository.save(profile);
+
+        return savedUser.getId();
     }
 
     @Transactional
