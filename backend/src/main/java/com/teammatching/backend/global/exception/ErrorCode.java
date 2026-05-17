@@ -23,8 +23,14 @@ public enum ErrorCode {
     LOGIN_FAILED(HttpStatus.UNAUTHORIZED, "A001", "Invalid email or password"),
 
     //project
-    PROJECT_NOT_FOUND(HttpStatus.NOT_FOUND, "P001", "Project not found"), 
-    FORBIDDEN_PROJECT_ACCESS(HttpStatus.FORBIDDEN, "P002", "You do not have permission to access this project");
+    PROJECT_NOT_FOUND(HttpStatus.NOT_FOUND, "P001", "Project not found"),
+    FORBIDDEN_PROJECT_ACCESS(HttpStatus.FORBIDDEN, "P002", "You do not have permission to access this project"),
+
+    // application
+    APPLICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "AP001", "Application not found"),
+    DUPLICATE_APPLICATION(HttpStatus.BAD_REQUEST, "AP002", "Already applied to this project"),
+    FORBIDDEN_APPLICATION_ACCESS(HttpStatus.FORBIDDEN, "AP003", "You do not have permission to access this application"),
+    PROJECT_CLOSED(HttpStatus.BAD_REQUEST, "AP004", "This project is no longer recruiting");
     
     private final HttpStatus status;
     private final String code;
