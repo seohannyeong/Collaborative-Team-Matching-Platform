@@ -31,6 +31,14 @@ public class ProjectController {
         return ResponseEntity.ok(projectService.getProjects());
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<List<ProjectResponse>> searchProjects(
+            @RequestParam(required = false) String techStack,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) ProjectStatus status) {
+        return ResponseEntity.ok(projectService.searchProjects(techStack, keyword, status));
+    }
+
     @GetMapping("/{projectId}")
     public ResponseEntity<ProjectResponse> getProject(@PathVariable Long projectId) {
         return ResponseEntity.ok(projectService.getProject(projectId));

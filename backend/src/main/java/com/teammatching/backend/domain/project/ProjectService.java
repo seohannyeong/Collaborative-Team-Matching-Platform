@@ -47,6 +47,13 @@ public class ProjectService {
                 .collect(Collectors.toList());
     }
 
+    public List<ProjectResponse> searchProjects(String techStack, String keyword, ProjectStatus status) {
+        String statusStr = (status != null) ? status.name() : null;
+        return projectRepository.searchProjects(techStack, statusStr, keyword).stream()
+                .map(ProjectResponse::from)
+                .collect(Collectors.toList());
+    }
+
     public ProjectResponse getProject(Long projectId) {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PROJECT_NOT_FOUND));
