@@ -48,6 +48,8 @@ public class ProjectService {
     }
 
     public List<ProjectResponse> searchProjects(String techStack, String keyword, ProjectStatus status) {
+        techStack = normalizeSearchCondition(techStack);
+        keyword = normalizeSearchCondition(keyword);
         String statusStr = (status != null) ? status.name() : null;
         return projectRepository.searchProjects(techStack, statusStr, keyword).stream()
                 .map(ProjectResponse::from)
@@ -85,5 +87,12 @@ public class ProjectService {
         }
 
         projectRepository.delete(project);
+    }
+
+    private String normalizeSearchCondition(String condition) {
+        if (condition == null || condition.trim().isEmpty()) {
+            return null;
+        }
+        return condition.trim();
     }
 }

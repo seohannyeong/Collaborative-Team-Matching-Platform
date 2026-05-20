@@ -124,4 +124,20 @@ class ProjectServiceTest {
         assertThat(springResults).extracting(ProjectResponse::getTitle).containsExactly("Backend Study");
         assertThat(dashboardResults).extracting(ProjectResponse::getTitle).containsExactly("Frontend App");
     }
+
+    @Test
+    void searchProjectsTreatsBlankConditionsAsNoFilter() {
+        userService.signUp(TestRequestFactory.signUpRequest("leader@example.com", "password123", "leader"));
+        projectService.createProject(
+                "leader@example.com",
+                TestRequestFactory.projectCreateRequest("Backend Study", "Spring boot team", "Spring"));
+        projectService.createProject(
+                "leader@example.com",
+                TestRequestFactory.projectCreateRequest("Frontend App", "React dashboard", "React"));
+
+        List<ProjectResponse> results = projectService.searchProjects("  ", "", null);
+
+        assertThat(results).extracting(ProjectResponse::getTitle)
+                .containsExactlyInAnyOrder("Backend Study", "Frontend App");
+    }
 }

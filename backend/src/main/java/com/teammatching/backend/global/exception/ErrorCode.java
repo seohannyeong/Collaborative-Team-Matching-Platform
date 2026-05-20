@@ -30,7 +30,9 @@ public enum ErrorCode {
     APPLICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "AP001", "Application not found"),
     DUPLICATE_APPLICATION(HttpStatus.BAD_REQUEST, "AP002", "Already applied to this project"),
     FORBIDDEN_APPLICATION_ACCESS(HttpStatus.FORBIDDEN, "AP003", "You do not have permission to access this application"),
-    PROJECT_CLOSED(HttpStatus.BAD_REQUEST, "AP004", "This project is no longer recruiting");
+    PROJECT_CLOSED(HttpStatus.BAD_REQUEST, "AP004", "This project is no longer recruiting"),
+    SELF_APPLICATION_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "AP005", "Project leader cannot apply to own project"),
+    INVALID_APPLICATION_STATUS_TRANSITION(HttpStatus.BAD_REQUEST, "AP006", "Invalid application status transition");
     
     private final HttpStatus status;
     private final String code;

@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
+import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -107,6 +108,37 @@ class ApplicationServiceTest {
     }
 
     @Test
+    void applyProjectRejectsOwnProject() {
+        assertThatThrownBy(() -> applicationService.applyProject(
+                project.getId(),
+                "leader@example.com",
+                TestRequestFactory.applicationRequest("I own this project.")))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.SELF_APPLICATION_NOT_ALLOWED);
+    }
+
+    @Test
+    void applyProjectRejectsPastDeadlineProject() {
+        ProjectResponse expiredProject = projectService.createProject(
+                "leader@example.com",
+                TestRequestFactory.projectCreateRequest(
+                        "Expired Project",
+                        "Deadline is over",
+                        "Spring",
+                        3,
+                        LocalDateTime.now().minusDays(1)));
+
+        assertThatThrownBy(() -> applicationService.applyProject(
+                expiredProject.getId(),
+                "applicant@example.com",
+                TestRequestFactory.applicationRequest("I want to join.")))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.PROJECT_CLOSED);
+    }
+
+    @Test
     void getApplicationsAllowsOnlyProjectLeader() {
         applicationService.applyProject(
                 project.getId(),
@@ -145,5 +177,58 @@ class ApplicationServiceTest {
                 TestRequestFactory.applicationStatusUpdateRequest(ApplicationStatus.ACCEPTED));
 
         assertThat(updated.getStatus()).isEqualTo(ApplicationStatus.ACCEPTED);
+    }
+
+    @Test
+    void updateApplicationStatusRejectsPendingOrAlreadyFinalStatus() {
+        ApplicationResponse application = applicationService.applyProject(
+                project.getId(),
+                "applicant@example.com",
+                TestRequestFactory.applicationRequest("I want to join."));
+
+        assertThatThrownBy(() -> applicationService.updateApplicationStatus(
+                application.getApplicationId(),
+                "leader@example.com",
+                TestRequestFactory.applicationStatusUpdateRequest(ApplicationStatus.PENDING)))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.INVALID_APPLICATION_STATUS_TRANSITION);
+
+        applicationService.updateApplicationStatus(
+                application.getApplicationId(),
+                "leader@example.com",
+                TestRequestFactory.applicationStatusUpdateRequest(ApplicationStatus.REJECTED));
+
+        assertThatThrownBy(() -> applicationService.updateApplicationStatus(
+                application.getApplicationId(),
+                "leader@example.com",
+                TestRequestFactory.applicationStatusUpdateRequest(ApplicationStatus.ACCEPTED)))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.INVALID_APPLICATION_STATUS_TRANSITION);
+    }
+
+    @Test
+    void acceptingEnoughApplicantsCompletesProject() {
+        ProjectResponse onePersonProject = projectService.createProject(
+                "leader@example.com",
+                TestRequestFactory.projectCreateRequest(
+                        "One Person Project",
+                        "Only one member needed",
+                        "Spring",
+                        1,
+                        LocalDateTime.now().plusDays(7)));
+        ApplicationResponse application = applicationService.applyProject(
+                onePersonProject.getId(),
+                "applicant@example.com",
+                TestRequestFactory.applicationRequest("I want to join."));
+
+        applicationService.updateApplicationStatus(
+                application.getApplicationId(),
+                "leader@example.com",
+                TestRequestFactory.applicationStatusUpdateRequest(ApplicationStatus.ACCEPTED));
+
+        assertThat(projectService.getProject(onePersonProject.getId()).getStatus())
+                .isEqualTo(ProjectStatus.COMPLETED);
     }
 }

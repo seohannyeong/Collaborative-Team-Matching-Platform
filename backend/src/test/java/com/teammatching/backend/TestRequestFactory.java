@@ -29,12 +29,17 @@ public final class TestRequestFactory {
     }
 
     public static ProjectCreateRequest projectCreateRequest(String title, String description, String techStack) {
+        return projectCreateRequest(title, description, techStack, 3, LocalDateTime.now().plusDays(7));
+    }
+
+    public static ProjectCreateRequest projectCreateRequest(String title, String description, String techStack,
+                                                            Integer recruitCount, LocalDateTime deadline) {
         ProjectCreateRequest request = new ProjectCreateRequest();
         ReflectionTestUtils.setField(request, "title", title);
         ReflectionTestUtils.setField(request, "description", description);
         ReflectionTestUtils.setField(request, "techStack", techStack);
-        ReflectionTestUtils.setField(request, "recruitCount", 3);
-        ReflectionTestUtils.setField(request, "deadline", LocalDateTime.now().plusDays(7));
+        ReflectionTestUtils.setField(request, "recruitCount", recruitCount);
+        ReflectionTestUtils.setField(request, "deadline", deadline);
         return request;
     }
 

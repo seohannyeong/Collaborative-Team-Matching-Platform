@@ -5,7 +5,6 @@ import com.teammatching.backend.domain.application.dto.ApplicationResponse;
 import com.teammatching.backend.domain.application.dto.ApplicationStatusUpdateRequest;
 import com.teammatching.backend.domain.project.Project;
 import com.teammatching.backend.domain.project.ProjectRepository;
-import com.teammatching.backend.domain.project.ProjectStatus;
 import com.teammatching.backend.domain.user.User;
 import com.teammatching.backend.domain.user.UserRepository;
 import com.teammatching.backend.global.exception.BusinessException;
@@ -14,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,7 +35,11 @@ public class ApplicationService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.PROJECT_NOT_FOUND));
 
         // 모집이 완료된 프로젝트인지 검증
-        if (project.getStatus() == ProjectStatus.COMPLETED) {
+        if (project.isLeader(email)) {
+            throw new BusinessException(ErrorCode.SELF_APPLICATION_NOT_ALLOWED);
+        }
+
+        if (!project.isRecruiting(LocalDateTime.now())) {
             throw new BusinessException(ErrorCode.PROJECT_CLOSED);
         }
 
@@ -79,7 +83,17 @@ public class ApplicationService {
             throw new BusinessException(ErrorCode.FORBIDDEN_APPLICATION_ACCESS);
         }
 
+        if (!application.isPending() || request.getStatus() == ApplicationStatus.PENDING) {
+            throw new BusinessException(ErrorCode.INVALID_APPLICATION_STATUS_TRANSITION);
+        }
+
         application.updateStatus(request.getStatus());
+
+        if (request.getStatus() == ApplicationStatus.ACCEPTED &&
+                applicationRepository.countByProjectAndStatus(application.getProject(), ApplicationStatus.ACCEPTED)
+                        >= application.getProject().getRecruitCount()) {
+            application.getProject().complete();
+        }
 
         return ApplicationResponse.from(application);
     }

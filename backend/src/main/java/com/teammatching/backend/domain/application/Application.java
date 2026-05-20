@@ -45,4 +45,8 @@ public class Application {
     public void updateStatus(ApplicationStatus status) {
         this.status = status;
     }
+
+    public boolean isPending() {
+        return this.status == ApplicationStatus.PENDING;
+    }
 }

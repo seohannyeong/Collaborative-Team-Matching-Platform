@@ -62,4 +62,12 @@ public class Project {
     public boolean isLeader(String email) {
         return this.leader.getEmail().equals(email);
     }
+
+    public boolean isRecruiting(LocalDateTime now) {
+        return this.status == ProjectStatus.RECRUITING && this.deadline.isAfter(now);
+    }
+
+    public void complete() {
+        this.status = ProjectStatus.COMPLETED;
+    }
 }
