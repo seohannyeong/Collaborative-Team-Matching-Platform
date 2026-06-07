@@ -14,10 +14,10 @@ export default function Project({ onProjectSelect }) {
   const [recruitCount, setRecruitCount] = useState(1);
   const [deadline, setDeadline] = useState('');
 
-  // 🔍 [새로운 상태 추가] 백엔드 @RequestParam 매칭용 검색 필드들
+  // 🔍 검색 필드 상태들
   const [searchKeyword, setSearchKeyword] = useState('');
   const [searchTechStack, setSearchTechStack] = useState('');
-  const [searchStatus, setSearchStatus] = useState('RECRUITING'); // 기본값은 모집중(RECRUITING)으로 세팅
+  const [searchStatus, setSearchStatus] = useState('RECRUITING'); 
 
   // 기본 유저 정보 및 지원 내역 선 로드
   const initUserAndApplications = async () => {
@@ -34,32 +34,43 @@ export default function Project({ onProjectSelect }) {
     }
   };
 
-  // 🌟 [핵심 로직] 백엔드 명세에 맞춰 동적 쿼리스트링을 조립하는 통합 검색/조회 함수
   const fetchFilteredProjects = async (e) => {
-    if (e) e.preventDefault(); // 폼 제출 시 페이지 새로고침 방지
+    if (e) e.preventDefault(); 
     setLoading(true);
     try {
-      // 1. 기본 주소 설정: /projects/search?
-      let queryUrl = '/projects/search?';
+      let searchResults = [];
 
-      // 2. 사용자가 채워 넣은 값만 쿼리스트링에 안전하게 동적 인코딩하여 붙여줍니다.
-      if (searchKeyword) queryUrl += `keyword=${encodeURIComponent(searchKeyword)}&`;
-      if (searchTechStack) queryUrl += `techStack=${encodeURIComponent(searchTechStack)}&`;
-      if (searchStatus) queryUrl += `status=${searchStatus}&`;
+      // 검색창이 둘 다 비어있으면 전체 조회 API 호출
+      if (!searchKeyword.trim() && !searchTechStack.trim()) {
+        const response = await API.get('/projects');
+        const allData = response.data.data.content || response.data.data || [];
+        searchResults = allData.filter(proj => proj.status === searchStatus);
+      } 
+      // 🔍 글자가 입력되어 검색할 때
+      else {
+        // 🌟 [가장 정석적인 동적 주소 조립]
+        // 값이 있는 파라미터만 주소 뒤에 엮어주고, 빈 값은 아예 누락시켜 백엔드에서 null로 받게 유도합니다.
+        const params = new URLSearchParams();
+        if (searchKeyword.trim()) params.append('keyword', searchKeyword.trim());
+        if (searchTechStack.trim()) params.append('techStack', searchTechStack.trim());
+        if (searchStatus) params.append('status', searchStatus);
 
-      // 백엔드 검색 API 기습 타격
-      const response = await API.get(queryUrl);
-      
-      // 3. 반가운 백엔드 주머니(.data.data) 해체쇼
-      const searchResults = response.data.data || [];
+        // 최종 주소 예시: /projects/search?keyword=스프링&status=RECRUITING
+        const response = await API.get(`/projects/search?${params.toString()}`);
+        searchResults = response.data.data || [];
+      }
 
-      // 4. [기존 요구사항 준수] 기간이 완전히 만료된 프로젝트는 프론트엔드 단에서 최종 필터링하여 제외
       const now = new Date();
-      const activeProjects = searchResults.filter(proj => new Date(proj.deadline) > now);
+      const activeProjects = searchResults.filter(proj => {
+        if (searchStatus === 'RECRUITING') {
+          return new Date(proj.deadline) > now;
+        }
+        return true; 
+      });
 
       setProjects(activeProjects);
     } catch (error) {
-      console.error('프로젝트 검색 실패:', error);
+      console.error('프로젝트 데이터 동기화 실패:', error);
       setProjects([]);
     } finally {
       setLoading(false);
@@ -71,7 +82,7 @@ export default function Project({ onProjectSelect }) {
     setSearchKeyword('');
     setSearchTechStack('');
     setSearchStatus('RECRUITING');
-    // 초기화 후 기본 모집중 리스트로 리로드
+    // 즉시 기본 전체 목록을 새로고침 하도록 트리거
     setTimeout(() => {
       loadInitialData();
     }, 50);
@@ -80,7 +91,7 @@ export default function Project({ onProjectSelect }) {
   const loadInitialData = async () => {
     setLoading(true);
     await initUserAndApplications();
-    await fetchFilteredProjects(); // 컴포넌트 켜질 때 기본 RECRUITING 상태로 자동 검색 호출
+    await fetchFilteredProjects(); 
   };
 
   useEffect(() => {
@@ -96,7 +107,7 @@ export default function Project({ onProjectSelect }) {
         deadline: deadline + ":00" 
       });
       alert('새로운 모집 팀이 성공적으로 개설되었습니다!');
-      loadInitialData(); // 즉각 최신 상태로 전체 동기화
+      loadInitialData(); 
       setTitle(''); setDescription(''); setTechStack(''); setRecruitCount(1); setDeadline('');
     } catch (error) {
       alert('프로젝트 개설 실패');
@@ -155,13 +166,13 @@ export default function Project({ onProjectSelect }) {
         </form>
       </div>
 
-      {/* SECTION B: 모집 중인 팀 목록 및 🔍초정밀 동적 검색 엔진 바 */}
+      {/* SECTION B: 모집 중인 팀 목록 및 검색 엔진 바 */}
       <div style={{ border: '1px solid #dee2e6', padding: '25px', borderRadius: '10px', background: '#ffffff', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
         <h3 style={{ marginTop: 0, color: '#007bff', borderBottom: '2px solid #007bff', paddingBottom: '8px' }}>
           🌐 현재 모집 중인 팀 목록
         </h3>
         
-        {/* 🔍 [신규 기능] 백엔드 맞춤형 멀티 검색 필터 폼 섹션 */}
+        {/* 🔍 맞춤형 멀티 검색 필터 폼 섹션 */}
         <form onSubmit={fetchFilteredProjects} style={{ 
           display: 'flex', gap: '10px', alignItems: 'center', background: '#f8f9fa', 
           padding: '15px', borderRadius: '6px', margin: '15px 0 25px 0', border: '1px solid #e9ecef', flexWrap: 'wrap'
@@ -189,14 +200,14 @@ export default function Project({ onProjectSelect }) {
             <select 
               value={searchStatus} 
               onChange={e => setSearchStatus(e.target.value)}
-              style={{ padding: '6px', borderRadius: '4px', border: '1px solid #ccc', background: '#fff', height: '30px' }}
+              style={{ padding: '6px', borderRadius: '4px', border: '1px solid #ccc', background: '#fff', height: '32px' }}
             >
               <option value="RECRUITING">🟢 모집 중</option>
               <option value="COMPLETED">🟠 모집 마감 / 팀 매칭 완료</option>
             </select>
           </div>
 
-          <div style={{ display: 'flex', gap: '8px', alignSelf: 'flex-end', height: '30px' }}>
+          <div style={{ display: 'flex', gap: '8px', alignSelf: 'flex-end', height: '32px' }}>
             <button type="submit" style={{ padding: '0 15px', background: '#007bff', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
               검색하기
             </button>
@@ -208,9 +219,9 @@ export default function Project({ onProjectSelect }) {
 
         {/* 게시판 리스트 본체 */}
         {loading ? (
-          <p style={{ textValue: 'center', color: '#888', padding: '20px 0' }}>⏳ 조건에 맞는 팀 프로젝트 검색 중...</p>
+          <p style={{ textAlign: 'center', color: '#888', padding: '20px 0' }}>⏳ 데이터를 동기화하는 중...</p>
         ) : projects.length === 0 ? (
-          <p style={{ color: '#888', textAlign: 'center', padding: '30px 0' }}>검색 조건에 부합하는 활성화된 구인 팀이 없습니다.</p>
+          <p style={{ color: '#888', textAlign: 'center', padding: '30px 0' }}>조건에 부합하는 구인 팀이 없습니다.</p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {projects.map((proj) => {
