@@ -97,4 +97,13 @@ public class ApplicationService {
 
         return ApplicationResponse.from(application);
     }
+
+    public List<ApplicationResponse> getMySentApplications(String email) {
+        User applicant = userRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        return applicationRepository.findByApplicant(applicant).stream()
+                .map(ApplicationResponse::from)
+                .collect(Collectors.toList());
+    }
 }

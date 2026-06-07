@@ -43,4 +43,9 @@ public class ApplicationController {
                                                                                    @Valid @RequestBody ApplicationStatusUpdateRequest request) {
         return ResponseEntity.ok(ApiResponse.success(applicationService.updateApplicationStatus(applicationId, authentication.getName(), request)));
     }
+
+    @GetMapping("/applications/sent")
+    public ResponseEntity<ApiResponse<List<ApplicationResponse>>> getMySentApplications(Authentication authentication) {
+        return ResponseEntity.ok(ApiResponse.success(applicationService.getMySentApplications(authentication.getName())));
+    }
 }
