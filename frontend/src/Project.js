@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import API from './api';
 
-export default function Project() {
+// 🌟 [핵심 변경] 부모인 App.js로부터 상세페이지를 열어주는 'onProjectSelect' 함수를 공급받습니다.
+export default function Project({ onProjectSelect }) {
   const [projects, setProjects] = useState([]); // 기본값은 안전하게 빈 배열
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -14,7 +15,7 @@ export default function Project() {
     try {
       const response = await API.get('/projects');
       
-      // ✨ [핵심 수정] 백엔드가 페이징 처리({ content: [...] })를 해서 보냈는지 체크합니다.
+      // ✨ 백엔드가 페이징 처리({ content: [...] })를 해서 보냈는지 체크합니다.
       if (response.data && response.data.content) {
         setProjects(response.data.content); // 페이징 안의 실제 배열 데이터만 쏙 뺍니다.
       } else if (Array.isArray(response.data)) {
@@ -45,6 +46,12 @@ export default function Project() {
       });
       alert('모집글이 등록되었습니다!');
       fetchProjects(); 
+      // 등록 완료 후 폼 초기화
+      setTitle('');
+      setDescription('');
+      setTechStack('');
+      setRecruitCount(1);
+      setDeadline('');
     } catch (error) {
       alert('프로젝트 등록 실패');
     }
@@ -62,13 +69,12 @@ export default function Project() {
   };
 
   return (
-    <div style={{ padding: '20px', border: '1px solid #ccc', margin: '20px' }}>
+    <div style={{ padding: '20px', border: '1px solid #ccc', margin: '20px 0', borderRadius: '8px' }}>
       <h2>📂 캡스톤/팀플 구인 게시판</h2>
       
       <form onSubmit={handleCreateProject} style={{ marginBottom: '30px' }}>
         <h3>🚀 새로운 모집 팀 개설하기 (내가 팀장)</h3>
         
-        {/* 🌟 각 입력창 앞에 이름표(strong)를 달아주고, placeholder는 삭제했습니다. */}
         <div style={{ marginBottom: '10px' }}>
           <strong>📌 프로젝트 제목: </strong>
           <input type="text" value={title} onChange={e => setTitle(e.target.value)} required />
@@ -99,16 +105,41 @@ export default function Project() {
 
       {/* 목록 출력 */}
       <h3>🌐 현재 모집 중인 팀 목록</h3>
-      {/* 🌟 [핵심 방어] projects 뒤에 물음표(?.)를 붙여 배열이 확실할 때만 화면에 그리도록 보호합니다. */}
-      {projects?.map((proj) => (
-        <div key={proj.id} style={{ border: '1px solid #eee', padding: '10px', margin: '10px 0' }}>
-          <h4>{proj.title} (모집 인원: {proj.recruitCount}명)</h4>
-          <p>{proj.description}</p>
-          <p><strong>요구 스택:</strong> {proj.techStack}</p>
-          <p><strong>팀장 ID:</strong> {proj.leaderName}</p>
-          <button onClick={() => handleApply(proj.id)}>이 팀에 지원하기</button>
-        </div>
-      ))}
+      
+      {projects?.length === 0 ? (
+        <p style={{ color: '#888' }}>현재 등록된 모집 팀이 없습니다.</p>
+      ) : (
+        projects?.map((proj) => (
+          <div key={proj.id} style={{ border: '1px solid #eee', padding: '15px', margin: '15px 0', borderRadius: '6px', background: '#fafafa' }}>
+            {/* 🌟 [UX 개선] 제목을 누르면 해당 게시글의 상세조회가 열리도록 마우스 커서와 색상을 입혔습니다. */}
+            <h4 
+              onClick={() => onProjectSelect(proj.id)} 
+              style={{ cursor: 'pointer', color: '#0056b3', textDecoration: 'underline', margin: '0 0 10px 0' }}
+            >
+              {proj.title} (모집 인원: {proj.recruitCount}명)
+            </h4>
+            <p style={{ color: '#555', margin: '5px 0' }}>{proj.description}</p>
+            <p style={{ margin: '5px 0' }}><strong>요구 스택:</strong> {proj.techStack}</p>
+            <p style={{ margin: '5px 0' }}><strong>팀장 ID:</strong> {proj.leaderName}</p>
+            
+            {/* 🌟 버튼 레이아웃 정돈 */}
+            <div style={{ marginTop: '12px' }}>
+              <button 
+                onClick={() => onProjectSelect(proj.id)} 
+                style={{ padding: '5px 12px', marginRight: '10px', cursor: 'pointer', background: '#fff', border: '1px solid #ccc', borderRadius: '4px' }}
+              >
+                🔍 상세보기
+              </button>
+              <button 
+                onClick={() => handleApply(proj.id)}
+                style={{ padding: '5px 12px', cursor: 'pointer', background: '#00c73c', color: '#fff', border: 'none', borderRadius: '4px' }}
+              >
+                이 팀에 지원하기
+              </button>
+            </div>
+          </div>
+        ))
+      )}
     </div>
   );
 }
