@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import API from './api';
 
 export default function Project() {
-  const [projects, setProjects] = useState([]);
+  const [projects, setProjects] = useState([]); // 기본값은 안전하게 빈 배열
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [techStack, setTechStack] = useState('');
@@ -13,9 +13,19 @@ export default function Project() {
   const fetchProjects = async () => {
     try {
       const response = await API.get('/projects');
-      setProjects(response.data);
+      
+      // ✨ [핵심 수정] 백엔드가 페이징 처리({ content: [...] })를 해서 보냈는지 체크합니다.
+      if (response.data && response.data.content) {
+        setProjects(response.data.content); // 페이징 안의 실제 배열 데이터만 쏙 뺍니다.
+      } else if (Array.isArray(response.data)) {
+        setProjects(response.data); // 만약 일반 배열로 온다면 그대로 넣습니다.
+      } else {
+        setProjects([]); // 데이터가 이상하면 빈 배열로 방어합니다.
+      }
+      
     } catch (error) {
-      console.error('프로젝트 목록 로딩 실패');
+      console.error('프로젝트 목록 로딩 실패', error);
+      setProjects([]); // 🌟 에러가 나더라도 화면이 터지지 않게 빈 배열로 초기화합니다.
     }
   };
 
@@ -26,22 +36,20 @@ export default function Project() {
   const handleCreateProject = async (e) => {
     e.preventDefault();
     try {
-      // [4단계] 프로젝트 팀원 모집글 생성 요청
       await API.post('/projects', { 
         title, 
         description, 
         techStack, 
         recruitCount: parseInt(recruitCount), 
-        deadline: deadline + ":00" // 백엔드 LocalDateTime 포맷 맞추기
+        deadline: deadline + ":00" 
       });
       alert('모집글이 등록되었습니다!');
-      fetchProjects(); // 목록 새로고침
+      fetchProjects(); 
     } catch (error) {
       alert('프로젝트 등록 실패');
     }
   };
 
-  // [5단계] 프로젝트에 지원서 제출 로직
   const handleApply = async (projectId) => {
     const message = prompt('팀장에게 보낼 지원 메시지를 적어주세요:');
     if (!message) return;
@@ -70,7 +78,8 @@ export default function Project() {
 
       {/* 목록 출력 */}
       <h3>🌐 현재 모집 중인 팀 목록</h3>
-      {projects.map((proj) => (
+      {/* 🌟 [핵심 방어] projects 뒤에 물음표(?.)를 붙여 배열이 확실할 때만 화면에 그리도록 보호합니다. */}
+      {projects?.map((proj) => (
         <div key={proj.id} style={{ border: '1px solid #eee', padding: '10px', margin: '10px 0' }}>
           <h4>{proj.title} (모집 인원: {proj.recruitCount}명)</h4>
           <p>{proj.description}</p>
