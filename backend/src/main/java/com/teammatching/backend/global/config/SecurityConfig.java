@@ -35,7 +35,7 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(List.of("http://localhost:3000"));
         
         // 2. GET, POST, PUT, DELETE 등 모든 요청 방식을 허용합니다.
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         
         // 3. 브라우저가 보낼 모든 헤더 정보(Authorization 토큰 포함)를 허용합니다.
         configuration.setAllowedHeaders(List.of("*"));
