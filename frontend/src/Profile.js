@@ -24,15 +24,15 @@ export default function Profile() {
       <h2>👤 내 구직 프로필 완성하기</h2>
       <form onSubmit={handleUpdate}>
         <label>관심 분야:</label><br/>
-        <input type="text" value={interest} onChange={e => setInterest(e.target.value)} placeholder="양자 기계 학습, 백엔드" /><br/>
+        <input type="text" value={interest} onChange={e => setInterest(e.target.value)}  /><br/>
         <label>기술 스택:</label><br/>
-        <input type="text" value={techStack} onChange={e => setTechStack(e.target.value)} placeholder="Spring Boot, Python, Qiskit" /><br/>
+        <input type="text" value={techStack} onChange={e => setTechStack(e.target.value)}  /><br/>
         <label>자기 소개:</label><br/>
         <textarea value={introduction} onChange={e => setIntroduction(e.target.value)} /><br/>
         <label>GitHub 주소:</label><br/>
         <input type="url" value={githubUrl} onChange={e => setGithubUrl(e.target.value)} /><br/>
         <label>협업 스타일/가용 시간:</label><br/>
-        <input type="text" value={collaborationStyle} onChange={e => setCollaborationStyle(e.target.value)} placeholder="주 20시간 가용, A+ 목표" /><br/>
+        <input type="text" value={collaborationStyle} onChange={e => setCollaborationStyle(e.target.value)}  /><br/>
         <button type="submit">저장하기</button>
       </form>
     </div>
