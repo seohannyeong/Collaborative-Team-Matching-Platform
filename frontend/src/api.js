@@ -5,13 +5,20 @@ const API = axios.create({
   baseURL: 'http://localhost:8080/api', 
 });
 
-// [중요 로직] 요청을 보낼 때 브라우저에 토큰이 있다면 헤더에 Bearer 토큰을 자동으로 탑재
-API.interceptors.request.use((config) => {
-  const token = localStorage.getItem('accessToken');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+API.interceptors.request.use(
+  (config) => {
+    // Auth.js에서 로그인 성공 시 저장한 토큰 키 이름을 확인하세요 (보통 'token' 또는 'accessToken')
+    const token = localStorage.getItem('accessToken'); 
+    
+    if (token) {
+      // 백엔드 스프링 시큐리티가 인식할 수 있도록 Bearer 규격으로 넣어줍니다.
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
   }
-  return config;
-});
+);
 
 export default API;

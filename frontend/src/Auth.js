@@ -18,7 +18,7 @@ export default function Auth({ onLoginSuccess }) {
       } else {
         // [2단계] 로그인 요청
         const response = await API.post('/auth/login', { email, password });
-        const token = response.data.accessToken;
+        const token = response.data.data.accessToken;
         localStorage.setItem('accessToken', token);
         alert('로그인 성공!');
         onLoginSuccess();
