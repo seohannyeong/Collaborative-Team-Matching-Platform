@@ -48,10 +48,17 @@ public class ProjectService {
     }
 
     public List<ProjectResponse> searchProjects(String techStack, String keyword, ProjectStatus status) {
-        techStack = normalizeSearchCondition(techStack);
-        keyword = normalizeSearchCondition(keyword);
+        // DB 레벨에서 한글 깨짐을 유발하는 CONCAT/LOWER를 원천 차단하기 위해 자바에서 직접 %와 소문자 처리를 끝냅니다!
+        String techStackParam = (techStack != null && !techStack.trim().isEmpty()) 
+                ? "%" + techStack.trim().toLowerCase() + "%" : null;
+        
+        String keywordParam = (keyword != null && !keyword.trim().isEmpty()) 
+                ? "%" + keyword.trim().toLowerCase() + "%" : null;
+        
         String statusStr = (status != null) ? status.name() : null;
-        return projectRepository.searchProjects(techStack, statusStr, keyword).stream()
+
+        // 가공이 완료된 청정 파라미터만 레포지토리에 대리 주입합니다.
+        return projectRepository.searchProjects(techStackParam, statusStr, keywordParam).stream()
                 .map(ProjectResponse::from)
                 .collect(Collectors.toList());
     }

@@ -9,10 +9,10 @@ import java.util.List;
 public interface ProjectRepository extends JpaRepository<Project, Long> {
 
     @Query("SELECT p FROM Project p " +
-           "WHERE (:techStack IS NULL OR LOWER(p.techStack) LIKE LOWER(CONCAT('%', :techStack, '%'))) " +
+           "WHERE (:techStack IS NULL OR LOWER(p.techStack) LIKE :techStack) " +
            "AND (:status IS NULL OR CAST(p.status AS String) = :status) " +
-           "AND (:keyword IS NULL OR (LOWER(p.title) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
-           "OR LOWER(p.description) LIKE LOWER(CONCAT('%', :keyword, '%'))))")
+           "AND (:keyword IS NULL OR (LOWER(p.title) LIKE :keyword " +
+           "OR LOWER(p.description) LIKE :keyword))")
     List<Project> searchProjects(@Param("techStack") String techStack,
                                  @Param("status") String status,
                                  @Param("keyword") String keyword);
