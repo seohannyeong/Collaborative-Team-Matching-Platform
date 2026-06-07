@@ -12,4 +12,5 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
     boolean existsByApplicantAndProject(User applicant, Project project);
 
     long countByProjectAndStatus(Project project, ApplicationStatus status);
+    List<Application> findByApplicant(User applicant);
 }

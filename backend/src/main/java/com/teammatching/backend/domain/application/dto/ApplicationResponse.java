@@ -4,7 +4,6 @@ import com.teammatching.backend.domain.application.Application;
 import com.teammatching.backend.domain.application.ApplicationStatus;
 import lombok.Builder;
 import lombok.Getter;
-
 import java.time.LocalDateTime;
 
 @Getter
@@ -17,6 +16,10 @@ public class ApplicationResponse {
     private String message;
     private ApplicationStatus status;
     private LocalDateTime createdAt;
+    
+    // 🌟 [확실한 수정] 프론트엔드 시각화를 위해 프로젝트 관련 정보 필드 추가
+    private Long projectId;
+    private String projectTitle;
 
     public static ApplicationResponse from(Application application) {
         return ApplicationResponse.builder()
@@ -27,6 +30,9 @@ public class ApplicationResponse {
                 .message(application.getMessage())
                 .status(application.getStatus())
                 .createdAt(application.getCreatedAt())
+                // 🌟 [확실한 수정] 매핑 로직 추가
+                .projectId(application.getProject().getId())
+                .projectTitle(application.getProject().getTitle())
                 .build();
     }
 }
