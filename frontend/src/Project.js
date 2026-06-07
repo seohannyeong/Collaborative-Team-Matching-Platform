@@ -14,7 +14,7 @@ export default function Project({ onProjectSelect }) {
   const [recruitCount, setRecruitCount] = useState(1);
   const [deadline, setDeadline] = useState('');
 
-  // 🔍 검색 필드 상태들
+  // 검색 필드 상태들
   const [searchKeyword, setSearchKeyword] = useState('');
   const [searchTechStack, setSearchTechStack] = useState('');
   const [searchStatus, setSearchStatus] = useState('RECRUITING'); 
@@ -34,6 +34,7 @@ export default function Project({ onProjectSelect }) {
     }
   };
 
+  // 검색어가 없을 때와 있을 때를 분기하는 스마트 조회 함수
   const fetchFilteredProjects = async (e) => {
     if (e) e.preventDefault(); 
     setLoading(true);
@@ -46,16 +47,13 @@ export default function Project({ onProjectSelect }) {
         const allData = response.data.data.content || response.data.data || [];
         searchResults = allData.filter(proj => proj.status === searchStatus);
       } 
-      // 🔍 글자가 입력되어 검색할 때
+      // 글자가 입력되어 검색할 때
       else {
-        // 🌟 [가장 정석적인 동적 주소 조립]
-        // 값이 있는 파라미터만 주소 뒤에 엮어주고, 빈 값은 아예 누락시켜 백엔드에서 null로 받게 유도합니다.
         const params = new URLSearchParams();
         if (searchKeyword.trim()) params.append('keyword', searchKeyword.trim());
         if (searchTechStack.trim()) params.append('techStack', searchTechStack.trim());
         if (searchStatus) params.append('status', searchStatus);
 
-        // 최종 주소 예시: /projects/search?keyword=스프링&status=RECRUITING
         const response = await API.get(`/projects/search?${params.toString()}`);
         searchResults = response.data.data || [];
       }
@@ -82,7 +80,6 @@ export default function Project({ onProjectSelect }) {
     setSearchKeyword('');
     setSearchTechStack('');
     setSearchStatus('RECRUITING');
-    // 즉시 기본 전체 목록을 새로고침 하도록 트리거
     setTimeout(() => {
       loadInitialData();
     }, 50);
@@ -172,7 +169,7 @@ export default function Project({ onProjectSelect }) {
           🌐 현재 모집 중인 팀 목록
         </h3>
         
-        {/* 🔍 맞춤형 멀티 검색 필터 폼 섹션 */}
+        {/* 맞춤형 멀티 검색 필터 폼 섹션 */}
         <form onSubmit={fetchFilteredProjects} style={{ 
           display: 'flex', gap: '10px', alignItems: 'center', background: '#f8f9fa', 
           padding: '15px', borderRadius: '6px', margin: '15px 0 25px 0', border: '1px solid #e9ecef', flexWrap: 'wrap'
@@ -256,11 +253,8 @@ export default function Project({ onProjectSelect }) {
                       🔍 팀 상세보기
                     </button>
 
-                    {isMyOwnProject ? (
-                      <button disabled style={{ padding: '6px 14px', background: '#e2e3e5', color: '#6c757d', border: 'none', borderRadius: '4px', cursor: 'not-allowed', fontSize: '13px' }}>
-                        ✓ 내가 개설한 팀 리더 상태
-                      </button>
-                    ) : isAlreadyApplied ? (
+                    {/* 🌟 [요구사항 반영] 내가 개설한 팀일 경우, 리더 상태 버튼 출력을 지우고 null로 처리합니다. */}
+                    {isMyOwnProject ? null : isAlreadyApplied ? (
                       <button disabled style={{ padding: '6px 14px', background: '#ffeeba', color: '#856404', border: 'none', borderRadius: '4px', cursor: 'not-allowed', fontSize: '13px', fontWeight: 'bold' }}>
                         ✓ 이미 지원 완료한 팀
                       </button>
