@@ -3,54 +3,88 @@ import API from './api';
 
 export default function Project({ onProjectSelect }) {
   const [projects, setProjects] = useState([]); 
-  const [appliedProjectIds, setAppliedProjectIds] = useState([]); // 내가 신청한 팀 ID 목록
-  const [currentUserName, setCurrentUserName] = useState('');     // 내 이름 상태
+  const [appliedProjectIds, setAppliedProjectIds] = useState([]); 
+  const [currentUserName, setCurrentUserName] = useState('');     
   const [loading, setLoading] = useState(true);
   
-  // 모집팀 개설 폼 상태들
+  // 폼 개설 상태들
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [techStack, setTechStack] = useState('');
   const [recruitCount, setRecruitCount] = useState(1);
   const [deadline, setDeadline] = useState('');
 
-  // 마스터 통합 데이터 수집 함수
-  const loadProjectBoardData = async () => {
+  // 🔍 [새로운 상태 추가] 백엔드 @RequestParam 매칭용 검색 필드들
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const [searchTechStack, setSearchTechStack] = useState('');
+  const [searchStatus, setSearchStatus] = useState('RECRUITING'); // 기본값은 모집중(RECRUITING)으로 세팅
+
+  // 기본 유저 정보 및 지원 내역 선 로드
+  const initUserAndApplications = async () => {
     try {
-      // 1. 내 정보 수집 (내가 개설한 팀 판별용)
       const profileRes = await API.get('/profile/me');
       setCurrentUserName(profileRes.data.data.name || '');
 
-      // 2. 내가 신청해둔 지원서 목록 수집 (이미 신청한 팀 판별용)
       const sentAppsRes = await API.get('/applications/sent');
       const sentApps = sentAppsRes.data.data || [];
       const appliedIds = sentApps.map(app => app.projectId);
       setAppliedProjectIds(appliedIds);
+    } catch (error) {
+      console.error('기본 유저 데이터 동기화 실패:', error);
+    }
+  };
 
-      // 3. 전체 프로젝트 조회 및 정밀 필터링 가동
-      const response = await API.get('/projects');
-      const rawProjects = response.data.data.content || response.data.data || [];
+  // 🌟 [핵심 로직] 백엔드 명세에 맞춰 동적 쿼리스트링을 조립하는 통합 검색/조회 함수
+  const fetchFilteredProjects = async (e) => {
+    if (e) e.preventDefault(); // 폼 제출 시 페이지 새로고침 방지
+    setLoading(true);
+    try {
+      // 1. 기본 주소 설정: /projects/search?
+      let queryUrl = '/projects/search?';
+
+      // 2. 사용자가 채워 넣은 값만 쿼리스트링에 안전하게 동적 인코딩하여 붙여줍니다.
+      if (searchKeyword) queryUrl += `keyword=${encodeURIComponent(searchKeyword)}&`;
+      if (searchTechStack) queryUrl += `techStack=${encodeURIComponent(searchTechStack)}&`;
+      if (searchStatus) queryUrl += `status=${searchStatus}&`;
+
+      // 백엔드 검색 API 기습 타격
+      const response = await API.get(queryUrl);
       
-      const now = new Date();
+      // 3. 반가운 백엔드 주머니(.data.data) 해체쇼
+      const searchResults = response.data.data || [];
 
-      // 🌟 [요구사항 반영] 모집 마감되었거나 기한이 만료된 프로젝트는 자동으로 목록에서 소멸시킵니다.
-      const activeProjects = rawProjects.filter(proj => {
-        const isRecruiting = proj.status === 'RECRUITING';
-        const isNotExpired = new Date(proj.deadline) > now;
-        return isRecruiting && isNotExpired;
-      });
+      // 4. [기존 요구사항 준수] 기간이 완전히 만료된 프로젝트는 프론트엔드 단에서 최종 필터링하여 제외
+      const now = new Date();
+      const activeProjects = searchResults.filter(proj => new Date(proj.deadline) > now);
 
       setProjects(activeProjects);
-
     } catch (error) {
-      console.error('구인 게시판 정보 동기화 실패:', error);
+      console.error('프로젝트 검색 실패:', error);
+      setProjects([]);
     } finally {
       setLoading(false);
     }
   };
 
+  // 검색 조건 초기화 함수
+  const handleResetSearch = () => {
+    setSearchKeyword('');
+    setSearchTechStack('');
+    setSearchStatus('RECRUITING');
+    // 초기화 후 기본 모집중 리스트로 리로드
+    setTimeout(() => {
+      loadInitialData();
+    }, 50);
+  };
+
+  const loadInitialData = async () => {
+    setLoading(true);
+    await initUserAndApplications();
+    await fetchFilteredProjects(); // 컴포넌트 켜질 때 기본 RECRUITING 상태로 자동 검색 호출
+  };
+
   useEffect(() => {
-    loadProjectBoardData();
+    loadInitialData();
   }, []);
 
   const handleCreateProject = async (e) => {
@@ -62,7 +96,7 @@ export default function Project({ onProjectSelect }) {
         deadline: deadline + ":00" 
       });
       alert('새로운 모집 팀이 성공적으로 개설되었습니다!');
-      loadProjectBoardData(); // 즉각 최신 상태로 리스트 리로드
+      loadInitialData(); // 즉각 최신 상태로 전체 동기화
       setTitle(''); setDescription(''); setTechStack(''); setRecruitCount(1); setDeadline('');
     } catch (error) {
       alert('프로젝트 개설 실패');
@@ -75,23 +109,18 @@ export default function Project({ onProjectSelect }) {
     try {
       await API.post(`/projects/${projectId}/apply`, { message });
       alert('지원이 완료되었습니다! 팀장의 대시보드 승인을 기다려주세요.');
-      loadProjectBoardData(); // 뱃지 상태 실시간 업데이트를 위해 리로드
+      loadInitialData(); 
     } catch (error) {
       alert(error.response?.data?.message || '지원 실패');
     }
   };
 
-  if (loading) return <div style={{ padding: '20px' }}>🔄 깨끗하고 정돈된 구인 게시판 구성 중...</div>;
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
       
-      {/* 🌟 [요구사항 6 반영] SECTION A: 새로운 모집 팀 개설 폼 (상단에 명확하게 분리된 카드 레이아웃) */}
+      {/* SECTION A: 새로운 모집 팀 개설 폼 */}
       <div style={{ 
-        background: '#f1f3f5', 
-        padding: '25px', 
-        borderRadius: '10px', 
-        border: '1px solid #ced4da',
+        background: '#f1f3f5', padding: '25px', borderRadius: '10px', border: '1px solid #ced4da',
         boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
       }}>
         <h3 style={{ marginTop: 0, color: '#343a40', borderBottom: '2px solid #6c757d', paddingBottom: '8px' }}>
@@ -126,18 +155,65 @@ export default function Project({ onProjectSelect }) {
         </form>
       </div>
 
-      {/* 🌟 [요구사항 6 반영] SECTION B: 모집 중인 팀 목록 (하단에 완전히 격리된 독립 화이트 보드 공간) */}
+      {/* SECTION B: 모집 중인 팀 목록 및 🔍초정밀 동적 검색 엔진 바 */}
       <div style={{ border: '1px solid #dee2e6', padding: '25px', borderRadius: '10px', background: '#ffffff', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
         <h3 style={{ marginTop: 0, color: '#007bff', borderBottom: '2px solid #007bff', paddingBottom: '8px' }}>
           🌐 현재 모집 중인 팀 목록
         </h3>
         
-        {projects.length === 0 ? (
-          <p style={{ color: '#888', textAlign: 'center', padding: '30px 0' }}>현재 조건에 부합하는 활성화된 구인 팀이 없습니다.</p>
+        {/* 🔍 [신규 기능] 백엔드 맞춤형 멀티 검색 필터 폼 섹션 */}
+        <form onSubmit={fetchFilteredProjects} style={{ 
+          display: 'flex', gap: '10px', alignItems: 'center', background: '#f8f9fa', 
+          padding: '15px', borderRadius: '6px', margin: '15px 0 25px 0', border: '1px solid #e9ecef', flexWrap: 'wrap'
+        }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#555' }}>🔍 키워드 검색</span>
+            <input 
+              type="text" placeholder="제목/내용 검색" value={searchKeyword} 
+              onChange={e => setSearchKeyword(e.target.value)}
+              style={{ padding: '6px', borderRadius: '4px', border: '1px solid #ccc', width: '140px' }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#555' }}>🛠️ 기술 스택</span>
+            <input 
+              type="text" placeholder="예: React, Java" value={searchTechStack} 
+              onChange={e => setSearchTechStack(e.target.value)}
+              style={{ padding: '6px', borderRadius: '4px', border: '1px solid #ccc', width: '140px' }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#555' }}>📊 모집 상태</span>
+            <select 
+              value={searchStatus} 
+              onChange={e => setSearchStatus(e.target.value)}
+              style={{ padding: '6px', borderRadius: '4px', border: '1px solid #ccc', background: '#fff', height: '30px' }}
+            >
+              <option value="RECRUITING">🟢 모집 중</option>
+              <option value="COMPLETED">🟠 모집 마감 / 팀 매칭 완료</option>
+            </select>
+          </div>
+
+          <div style={{ display: 'flex', gap: '8px', alignSelf: 'flex-end', height: '30px' }}>
+            <button type="submit" style={{ padding: '0 15px', background: '#007bff', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+              검색하기
+            </button>
+            <button type="button" onClick={handleResetSearch} style={{ padding: '0 12px', background: '#6c757d', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+              초기화
+            </button>
+          </div>
+        </form>
+
+        {/* 게시판 리스트 본체 */}
+        {loading ? (
+          <p style={{ textValue: 'center', color: '#888', padding: '20px 0' }}>⏳ 조건에 맞는 팀 프로젝트 검색 중...</p>
+        ) : projects.length === 0 ? (
+          <p style={{ color: '#888', textAlign: 'center', padding: '30px 0' }}>검색 조건에 부합하는 활성화된 구인 팀이 없습니다.</p>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '20px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {projects.map((proj) => {
-              // 판별 플래그 설정
               const isMyOwnProject = proj.leaderName === currentUserName;
               const isAlreadyApplied = appliedProjectIds.includes(proj.id);
 
@@ -146,34 +222,19 @@ export default function Project({ onProjectSelect }) {
                   border: '1px solid #e9ecef', padding: '18px', borderRadius: '8px', background: '#f8f9fa',
                   borderLeft: isMyOwnProject ? '5px solid #28a745' : isAlreadyApplied ? '5px solid #ffc107' : '1px solid #e9ecef'
                 }}>
-                  {/* 🌟 [요구사항 1 반영] 제목 등 어디에도 숫자 ID 정보가 출력되지 않습니다. */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <h4 style={{ margin: 0, fontSize: '18px', color: '#212529' }}>
-                      {proj.title}
-                    </h4>
-                    
-                    {/* 🌟 [요구사항 3, 4 반영] 상황에 맞는 정교한 상태 요약 뱃지 노출 */}
+                    <h4 style={{ margin: 0, fontSize: '18px', color: '#212529' }}>{proj.title}</h4>
                     <div style={{ display: 'flex', gap: '6px' }}>
                       <span style={{ background: '#e2e3e5', color: '#383d41', padding: '3px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>
                         👥 모집 {proj.recruitCount}명
                       </span>
-                      {isMyOwnProject && (
-                        <span style={{ background: '#d4edda', color: '#155724', padding: '3px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>
-                          👑 내가 개설함
-                        </span>
-                      )}
-                      {isAlreadyApplied && (
-                        <span style={{ background: '#fff3cd', color: '#856404', padding: '3px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>
-                          📝 이미 신청함
-                        </span>
-                      )}
+                      {isMyOwnProject && <span style={{ background: '#d4edda', color: '#155724', padding: '3px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>👑 내가 개설함</span>}
+                      {isAlreadyApplied && <span style={{ background: '#fff3cd', color: '#856404', padding: '3px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>📝 이미 신청함</span>}
                     </div>
                   </div>
 
                   <p style={{ color: '#495057', margin: '8px 0', fontSize: '15px' }}>{proj.description}</p>
                   <p style={{ margin: '4px 0', fontSize: '14px' }}><strong>🛠️ 필요 스택:</strong> {proj.techStack}</p>
-                  
-                  {/* 🌟 [요구사항 1 반영] 팀장의 고유 숫자 ID 출력을 지우고 순수 성함만 표시 */}
                   <p style={{ margin: '4px 0', fontSize: '14px', color: '#6c757d' }}><strong>👑 팀장 명:</strong> {proj.leaderName}</p>
                   
                   <div style={{ marginTop: '14px', display: 'flex', gap: '10px' }}>
@@ -184,19 +245,12 @@ export default function Project({ onProjectSelect }) {
                       🔍 팀 상세보기
                     </button>
 
-                    {/* 상태 조건에 따른 동작 제어 */}
                     {isMyOwnProject ? (
-                      <button 
-                        disabled
-                        style={{ padding: '6px 14px', background: '#e2e3e5', color: '#6c757d', border: 'none', borderRadius: '4px', cursor: 'not-allowed', fontSize: '13px' }}
-                      >
+                      <button disabled style={{ padding: '6px 14px', background: '#e2e3e5', color: '#6c757d', border: 'none', borderRadius: '4px', cursor: 'not-allowed', fontSize: '13px' }}>
                         ✓ 내가 개설한 팀 리더 상태
                       </button>
                     ) : isAlreadyApplied ? (
-                      <button 
-                        disabled
-                        style={{ padding: '6px 14px', background: '#ffeeba', color: '#856404', border: 'none', borderRadius: '4px', cursor: 'not-allowed', fontSize: '13px', fontWeight: 'bold' }}
-                      >
+                      <button disabled style={{ padding: '6px 14px', background: '#ffeeba', color: '#856404', border: 'none', borderRadius: '4px', cursor: 'not-allowed', fontSize: '13px', fontWeight: 'bold' }}>
                         ✓ 이미 지원 완료한 팀
                       </button>
                     ) : (
