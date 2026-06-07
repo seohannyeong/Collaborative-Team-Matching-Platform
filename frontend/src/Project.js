@@ -65,15 +65,36 @@ export default function Project() {
     <div style={{ padding: '20px', border: '1px solid #ccc', margin: '20px' }}>
       <h2>📂 캡스톤/팀플 구인 게시판</h2>
       
-      {/* 글쓰기 양식 */}
       <form onSubmit={handleCreateProject} style={{ marginBottom: '30px' }}>
         <h3>🚀 새로운 모집 팀 개설하기 (내가 팀장)</h3>
-        <input type="text" placeholder="프로젝트 제목" value={title} onChange={e => setTitle(e.target.value)} required /><br/>
-        <textarea placeholder="프로젝트 내용 및 설명" value={description} onChange={e => setDescription(e.target.value)} required /><br/>
-        <input type="text" placeholder="요구하는 팀원 기술 스택" value={techStack} onChange={e => setTechStack(e.target.value)} required /><br/>
-        <input type="number" placeholder="모집 인원" value={recruitCount} onChange={e => setRecruitCount(e.target.value)} min="1" required /><br/>
-        <input type="datetime-local" value={deadline} onChange={e => setDeadline(e.target.value)} required /><br/>
-        <button type="submit">모집 시작하기</button>
+        
+        {/* 🌟 각 입력창 앞에 이름표(strong)를 달아주고, placeholder는 삭제했습니다. */}
+        <div style={{ marginBottom: '10px' }}>
+          <strong>📌 프로젝트 제목: </strong>
+          <input type="text" value={title} onChange={e => setTitle(e.target.value)} required />
+        </div>
+
+        <div style={{ marginBottom: '10px' }}>
+          <strong>📝 프로젝트 내용 및 설명: </strong><br/>
+          <textarea value={description} onChange={e => setDescription(e.target.value)} required style={{ width: '100%', height: '80px' }} />
+        </div>
+
+        <div style={{ marginBottom: '10px' }}>
+          <strong>🛠️ 요구 기술 스택: </strong>
+          <input type="text" value={techStack} onChange={e => setTechStack(e.target.value)} required />
+        </div>
+
+        <div style={{ marginBottom: '10px' }}>
+          <strong>👥 모집 인원 (명): </strong>
+          <input type="number" value={recruitCount} onChange={e => setRecruitCount(e.target.value)} min="1" required />
+        </div>
+
+        <div style={{ marginBottom: '15px' }}>
+          <strong>📅 모집 마감 기한: </strong>
+          <input type="datetime-local" value={deadline} onChange={e => setDeadline(e.target.value)} required />
+        </div>
+
+        <button type="submit" style={{ padding: '8px 15px', cursor: 'pointer' }}>모집 시작하기</button>
       </form>
 
       {/* 목록 출력 */}
