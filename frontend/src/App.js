@@ -2,21 +2,19 @@ import React, { useState } from 'react';
 import Auth from './Auth';
 import Profile from './Profile';
 import Project from './Project';
-import ProjectDetail from './ProjectDetail'; // ✨ 추가된 상세 페이지
-import Dashboard from './Dashboard';         // ✨ 추가된 대시보드
+import ProjectDetail from './ProjectDetail'; 
+import Dashboard from './Dashboard';         
+import MyTeam from './MyTeam'; // 🌟 새롭게 추가한 나의 팀 컴포넌트 임포트
 
 export default function App() {
-  // view 상태 관리: 'AUTH' | 'LIST' | 'DETAIL' | 'DASHBOARD'
+  // view 상태 관리: 'AUTH' | 'LIST' | 'DETAIL' | 'DASHBOARD' | 'MY_TEAM'
   const [view, setView] = useState('AUTH');
-  // 상세 조회를 위해 선택된 프로젝트의 ID를 저장하는 상태
   const [selectedProjectId, setSelectedProjectId] = useState(null);
 
-  // 로그인 성공 시 호출될 함수
   const handleLoginSuccess = () => {
     setView('LIST');
   };
 
-  // 프로젝트를 클릭했을 때 상세 페이지로 이동시키는 함수
   const handleProjectSelect = (id) => {
     setSelectedProjectId(id);
     setView('DETAIL');
@@ -27,12 +25,10 @@ export default function App() {
       <h1>🤝 대학생 맞춤형 팀 빌딩 플랫폼</h1>
       
       {view === 'AUTH' ? (
-        /* 🔐 비로그인 상태: 로그인/회원가입 화면 */
         <Auth onLoginSuccess={handleLoginSuccess} />
       ) : (
-        /* 🔓 로그인 상태: 메인 서비스 화면 */
         <div>
-          {/* 🧭 상단 네비게이션 바 (탭 전환 및 로그아웃) */}
+          {/* 🧭 상단 네비게이션 바 메뉴 확장 */}
           <div style={{ 
             display: 'flex', 
             gap: '12px', 
@@ -55,6 +51,21 @@ export default function App() {
             >
               🎛️ 매칭 대시보드
             </button>
+            {/* 🌟 [추가] 나의 팀 전용 네비게이션 버튼 단추 장착 */}
+            <button 
+              onClick={() => setView('MY_TEAM')} 
+              style={{ 
+                padding: '8px 14px', 
+                cursor: 'pointer', 
+                background: view === 'MY_TEAM' ? '#212529' : '#fff',
+                color: view === 'MY_TEAM' ? '#fff' : '#000',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                fontWeight: view === 'MY_TEAM' ? 'bold' : 'normal' 
+              }}
+            >
+              🏃‍♂️ 나의 팀 관리
+            </button>
             
             <button 
               onClick={() => { localStorage.clear(); setView('AUTH'); }} 
@@ -73,18 +84,14 @@ export default function App() {
             </button>
           </div>
 
-          {/* 📺 네비게이션 선택에 따른 화면(뷰) 전환 영역 */}
-          
-          {/* 1. 메인 목록 뷰 (프로필 + 프로젝트 모집 목록) */}
+          {/* 📺 네비게이션 선택에 따른 화면 전환 */}
           {view === 'LIST' && (
             <div>
               <Profile />
-              {/* Project 컴포넌트에 상세조회 함수를 prop으로 전달합니다 */}
               <Project onProjectSelect={handleProjectSelect} />
             </div>
           )}
 
-          {/* 2. 프로젝트 단건 상세 보기 뷰 */}
           {view === 'DETAIL' && (
             <ProjectDetail 
               projectId={selectedProjectId} 
@@ -92,9 +99,13 @@ export default function App() {
             />
           )}
 
-          {/* 3. 나의 매칭 대시보드 뷰 (보낸/받은 지원서 관리) */}
           {view === 'DASHBOARD' && (
             <Dashboard />
+          )}
+
+          {/* 🌟 [추가] 나의 팀 관리 전용 화면 분기 매핑 */}
+          {view === 'MY_TEAM' && (
+            <MyTeam />
           )}
         </div>
       )}
