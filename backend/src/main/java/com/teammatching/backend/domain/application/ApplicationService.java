@@ -63,12 +63,23 @@ public class ApplicationService {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PROJECT_NOT_FOUND));
 
-        // 지원자 목록은 프로젝트 리더만 조회 가능
-        if (!project.isLeader(email)) {
+        // 🌟 [확실한 수정] 현재 요청을 보낸 유저 객체를 식별합니다.
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        // 해당 프로젝트에 접수된 전체 지원서 목록을 가져옵니다.
+        List<Application> applications = applicationRepository.findByProject(project);
+
+        // 🌟 [핵심 보안 추가] 현재 로그인한 유저가 이 프로젝트에 승인(ACCEPTED)된 팀원인지 검증합니다.
+        boolean isAcceptedMember = applications.stream()
+                .anyMatch(app -> app.getApplicant().equals(user) && app.getStatus() == ApplicationStatus.ACCEPTED);
+
+        // 🌟 [확실한 수정] 팀장도 아니고, 승인된 팀원도 아니라면 가차없이 접근을 차단합니다.
+        if (!project.isLeader(email) && !isAcceptedMember) {
             throw new BusinessException(ErrorCode.FORBIDDEN_APPLICATION_ACCESS);
         }
 
-        return applicationRepository.findByProject(project).stream()
+        return applications.stream()
                 .map(ApplicationResponse::from)
                 .collect(Collectors.toList());
     }

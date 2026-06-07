@@ -2,24 +2,38 @@ import React, { useState } from 'react';
 import Auth from './Auth';
 import Profile from './Profile';
 import Project from './Project';
-import ProjectDetail from './ProjectDetail'; // ✨ 추가된 상세 페이지
-import Dashboard from './Dashboard';         // ✨ 추가된 대시보드
+import ProjectDetail from './ProjectDetail'; 
+import Dashboard from './Dashboard';         
+import MyTeam from './MyTeam'; 
 
 export default function App() {
-  // view 상태 관리: 'AUTH' | 'LIST' | 'DETAIL' | 'DASHBOARD'
+  // view 상태 관리: 'AUTH' | 'LIST' | 'DETAIL' | 'DASHBOARD' | 'MY_TEAM'
   const [view, setView] = useState('AUTH');
-  // 상세 조회를 위해 선택된 프로젝트의 ID를 저장하는 상태
   const [selectedProjectId, setSelectedProjectId] = useState(null);
 
-  // 로그인 성공 시 호출될 함수
   const handleLoginSuccess = () => {
     setView('LIST');
   };
 
-  // 프로젝트를 클릭했을 때 상세 페이지로 이동시키는 함수
   const handleProjectSelect = (id) => {
     setSelectedProjectId(id);
     setView('DETAIL');
+  };
+
+  // 🎨 공통 탭 스타일 지정을 위한 헬퍼 함수 (중복 코드를 줄이고 가독성을 높입니다)
+  const getTabStyle = (tabName) => {
+    const isActive = view === tabName;
+    return {
+      padding: '8px 16px',
+      cursor: 'pointer',
+      borderRadius: '4px',
+      fontWeight: isActive ? 'bold' : 'normal',
+      // 🌟 [핵심 변경] 활성화 상태면 파란색 배경+흰색 글씨 / 비활성화면 흰색 배경+검은색 글씨
+      background: isActive ? '#007bff' : '#ffffff',
+      color: isActive ? '#ffffff' : '#333333',
+      border: isActive ? '1px solid #007bff' : '1px solid #cccccc',
+      transition: 'all 0.2s ease', // 클릭하거나 바뀔 때 부드럽게 색상이 변하는 효과
+    };
   };
 
   return (
@@ -27,12 +41,10 @@ export default function App() {
       <h1>🤝 대학생 맞춤형 팀 빌딩 플랫폼</h1>
       
       {view === 'AUTH' ? (
-        /* 🔐 비로그인 상태: 로그인/회원가입 화면 */
         <Auth onLoginSuccess={handleLoginSuccess} />
       ) : (
-        /* 🔓 로그인 상태: 메인 서비스 화면 */
         <div>
-          {/* 🧭 상단 네비게이션 바 (탭 전환 및 로그아웃) */}
+          {/* 🧭 상단 네비게이션 바 */}
           <div style={{ 
             display: 'flex', 
             gap: '12px', 
@@ -43,19 +55,31 @@ export default function App() {
             border: '1px solid #e9ecef',
             alignItems: 'center' 
           }}>
+            {/* 1. 구인 게시판 탭 */}
             <button 
               onClick={() => setView('LIST')} 
-              style={{ padding: '8px 14px', cursor: 'pointer', fontWeight: view === 'LIST' ? 'bold' : 'normal' }}
+              style={getTabStyle('LIST')}
             >
               🌐 구인 게시판 & 프로필
             </button>
+            
+            {/* 2. 매칭 대시보드 탭 */}
             <button 
               onClick={() => setView('DASHBOARD')} 
-              style={{ padding: '8px 14px', cursor: 'pointer', fontWeight: view === 'DASHBOARD' ? 'bold' : 'normal' }}
+              style={getTabStyle('DASHBOARD')}
             >
               🎛️ 매칭 대시보드
             </button>
             
+            {/* 3. 나의 팀 관리 탭 */}
+            <button 
+              onClick={() => setView('MY_TEAM')} 
+              style={getTabStyle('MY_TEAM')}
+            >
+              🏃‍♂️ 나의 팀 관리
+            </button>
+            
+            {/* 로그아웃 버튼 (독립 디자인 유지) */}
             <button 
               onClick={() => { localStorage.clear(); setView('AUTH'); }} 
               style={{ 
@@ -73,18 +97,14 @@ export default function App() {
             </button>
           </div>
 
-          {/* 📺 네비게이션 선택에 따른 화면(뷰) 전환 영역 */}
-          
-          {/* 1. 메인 목록 뷰 (프로필 + 프로젝트 모집 목록) */}
+          {/* 📺 네비게이션 선택에 따른 화면 전환 */}
           {view === 'LIST' && (
             <div>
               <Profile />
-              {/* Project 컴포넌트에 상세조회 함수를 prop으로 전달합니다 */}
               <Project onProjectSelect={handleProjectSelect} />
             </div>
           )}
 
-          {/* 2. 프로젝트 단건 상세 보기 뷰 */}
           {view === 'DETAIL' && (
             <ProjectDetail 
               projectId={selectedProjectId} 
@@ -92,9 +112,12 @@ export default function App() {
             />
           )}
 
-          {/* 3. 나의 매칭 대시보드 뷰 (보낸/받은 지원서 관리) */}
           {view === 'DASHBOARD' && (
             <Dashboard />
+          )}
+
+          {view === 'MY_TEAM' && (
+            <MyTeam />
           )}
         </div>
       )}
