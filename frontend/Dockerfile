@@ -4,7 +4,7 @@ WORKDIR /app
 
 # 의존성 캐싱: package 파일 먼저 복사 후 설치
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm install
 
 # 소스 복사 후 프로덕션 빌드
 COPY . .
