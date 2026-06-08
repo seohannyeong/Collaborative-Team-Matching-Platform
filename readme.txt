@@ -1,6 +1,5 @@
 대학생 맞춤형 팀원 매칭 플랫폼 (Team Matching Platform)
 
-
  1. 프로젝트 개요 
   학부 프로젝트 및 캡스톤 디자인 진행 시, 팀원의 기술 스택뿐만 아니라 실제 협업 스타일(가용 시간, 학점 목표 등)의 불일치로 발생하는 갈등과 효율 저하 문제를 해결하고자 합니다.
 
@@ -15,15 +14,14 @@
     * Spring Data JPA, Hibernate, H2/MySQL
     * 역할 기반 권한 제어 필터링 보안 계층
 
-
  3. 핵심 기능 
     1. 프로젝트 개설 및 구인 게시판
     * 직관적인 팀 모집: 프로젝트 목적, 요구 기술 스택, 모집 인원 및 마감 기한을 설정하여 누구나 쉽게 새로운 팀을 개설하고 구인을 시작할 수 있습니다.
     * 깔끔한 정보 제공: 복잡한 시스템 내부 ID 같은 데이터는 숨기고, 프로젝트 제목과 팀장 이름 등 유저에게 꼭 필요한 정보만 직관적으로 노출합니다.
     
     2. 맞춤형 팀 검색 및 스마트 필터링
-    * 동적 복합 검색: 수많은 모집글 중 내가 원하는 조건만 골라 볼 수 있도록 `키워드`, `기술 스택`, `모집 상태`를 자유롭게 조합하여 실시간으로 팀을 필터링할 수 있습니다.
-    * 유저 맞춤형 상태 안내: 게시판 목록 내에서 `내가 개설함` 또는 `이미 신청함`과 같은 현재 나의 상태가 실시간 뱃지로 표시되어 편리함을 더했습니다.
+    * 동적 복합 검색: 수많은 모집글 중 내가 원하는 조건만 골라 볼 수 있도록 키워드, 기술 스택, 모집 상태를 자유롭게 조합하여 실시간으로 팀을 필터링할 수 있습니다.
+    * 유저 맞춤형 상태 안내: 게시판 목록 내에서 '내가 개설함' 또는 '이미 신청함'과 같은 현재 나의 상태가 실시간 뱃지로 표시되어 편리함을 더했습니다.
     
     3. 지원서 전송 및 실시간 매칭 대시보드
     * 간편 지원 프로세스: 마음에 드는 팀을 발견하면 팀장에게 정성 섞인 지원 한줄평을 적어 즉시 참여 신청을 보낼 수 있습니다.
@@ -33,23 +31,57 @@
     * 소속 팀 집중 관리: 매칭이 최종 완료되어 정식 합류한 프로젝트들을 한눈에 모아보고 관리하는 전용 공간을 제공합니다.
     * 동료 프로필 크로스 체크: 팀장뿐만 아니라 소속 팀원들끼리도 함께 협업할 동료의 구직 프로필을 상호 검증할 수 있는 연쇄 팝업 창구가 마련되어 있어, 팀의 신뢰도를 높여줍니다.
     
-    5.  독립적인 구직 프로필 관리
+    5. 독립적인 구직 프로필 관리
     * 구인 게시판과 완벽히 분리된 독자적인 프로필 메뉴를 통해 자신의 이력, 다룰 줄 아는 기술 스택, 자기소개를 상시 업데이트하고 관리할 수 있습니다.
 
-  4. 시작하기 
-    ```bash
-    1. 레포지토리 클론
-      git clone [https://github.com/seohannyeong/Collaborative-Team-Matching-Platform.git]
-      (https://github.com/seohannyeong/Collaborative-Team-Matching-Platform.git)
-    
-    2. Docker를 이용한 환경 구축 및 실행
-      docker-compose up -ds
-    
-    3. Backend Run
-      cd backend
-      ./gradlew bootRun
-    
-    4. Frontend Run
-      cd frontend
-      npm install
-      npm start
+ 4. 프로젝트 구조 
+  Collaborative-Team-Matching-Platform/
+  ├── backend/               # 백엔드 Spring Boot 루트 디렉토리
+  │   ├── src/
+  │   │   └── main/
+  │   │       ├── java/com/platform/
+  │   │       │   ├── controller/      # REST API 엔드포인트 제어 계층
+  │   │       │   ├── service/         # 비즈니스 로직 처리 및 트랜잭션 관리 계층
+  │   │       │   ├── repository/      # Spring Data JPA 기반 데이터베이스 접근 계층
+  │   │       │   ├── entity/          # 데이터베이스 테이블 매핑 자바 객체 계층
+  │   │       │   └── dto/             # 데이터 전송 객체 계층
+  │   │       └── resources/
+  │   │           └── application.yml  # 데이터베이스 연결 정보 및 환경설정 파일
+  │   ├── build.gradle       # 빌드 및 라이브러리 의존성 설정 파일
+  │   └── gradlew            # Gradle 실행 빌드 스크립트
+  ├── frontend/              # 프론트엔드 React 루트 디렉토리
+  │   ├── public/            # 정적 파일 보관 폴더
+  │   ├── src/
+  │   │   ├── App.js         # 통합 애플리케이션 진입점 및 전역 상태 내비게이션 바 제어
+  │   │   ├── api.js         # Axios HTTP 통신 클라이언트 공통 설정 파일
+  │   │   ├── Auth.js        # 유저 회원가입 및 로그인 처리 컴포넌트
+  │   │   ├── Profile.js     # 개인 이력 및 구직 프로필 상시 편집 컴포넌트
+  │   │   ├── Project.js     # 구인 카드 개설 폼 및 목록 조회 조건 검색 컴포넌트
+  │   │   ├── ProjectDetail.js # 개별 프로젝트 세부 정보 상세 조회 컴포넌트
+  │   │   ├── Dashboard.js   # 프로젝트 개설자 전용 지원자 승인/거절 대시보드 컴포넌트
+  │   │   └── MyTeam.js      # 합류 완료된 팀원 명단 열람 및 동료 정보 연쇄 모달 컴포넌트
+  │   └── package.json       # 패키지 정보 및 실행 스크립트 정의 파일
+  └── docker-compose.yml     # 외부 MySQL 데이터베이스 가상화 환경 구축 스크립트
+
+ 5. 트러블 슈팅 
+  * 정식 합류된 일반 팀원의 동료 명단 및 프로필 조회 권한 개방 (403 Forbidden 차단)
+    * 상황: 나의 팀 관리 탭에서 동료 명단을 확인하거나 특정 팀원의 프로필 상세 모달을 띄울 때, 백엔드 서비스 계층의 접근 제어 로직이 오직 프로젝트 리더(팀장)에게만 열려 있어 일반 팀원이 요청 시 권한 에러(403 Forbidden)가 발생하거나 동료 정보가 정상적으로 로드되지 않는 현상이 발견되었습니다.
+    * 해결: ApplicationService.java 내 검증 로직을 수정하여, 요청한 사용자가 해당 프로젝트에 ACCEPTED(승인 완료) 상태로 소속된 일반 팀원인 경우에도 소속 동료 명단 및 상대 프로필 데이터 API를 정상적으로 호출할 수 있도록 접근 권한 계층을 안전하게 보완했습니다. 
+
+ 6. 시작하기 
+  1. 레포지토리 클론
+    git clone https://github.com/seohannyeong/Collaborative-Team-Matching-Platform.git
+  
+  2. Docker를 이용한 환경 구축 및 실행
+    docker-compose up -d
+  
+  3. Backend Run
+    cd backend
+    ./gradlew bootRun
+    * 백엔드 API 주소: http://localhost:8080
+  
+  4. Frontend Run
+    cd frontend
+    npm install
+    npm start
+    * 클라이언트 주소: http://localhost:3000
