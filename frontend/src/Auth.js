@@ -24,7 +24,6 @@ export default function Auth({ onLoginSuccess }) {
         onLoginSuccess();
       }
     } catch (error) {
-      // ✨ [핵심 수정] 백엔드가 보내준 상세한 규칙 위반 메시지가 있으면 그걸 보여주고, 없으면 기본 에러 문구를 보여줍니다.
       const serverErrorMessage = error.response?.data?.message;
       if (serverErrorMessage) {
         alert(`❌ 가입 실패 사유: ${serverErrorMessage}`);
@@ -35,43 +34,67 @@ export default function Auth({ onLoginSuccess }) {
   };
 
   return (
-    <div style={{ padding: '30px', border: '1px solid #ccc', borderRadius: '10px', margin: '20px', backgroundColor: '#f9f9f9' }}>
-      <h2>{isSignUp ? '📝 플랫폼 회원가입 창구' : '🔑 로그인 창구'}</h2>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-        
-        {/* 이메일 입력 및 가이드 규약 */}
-        <div>
-          <label style={{ fontWeight: 'bold' }}>이메일 주소</label><br />
-          <input type="email" placeholder="example@knu.ac.kr" value={email} onChange={e => setEmail(e.target.value)} style={{ width: '100%', padding: '8px', marginTop: '5px' }} required />
-          {isSignUp && <small style={{ color: '#666', display: 'block', marginTop: '3px' }}>💡 학교 인증이 가능한 올바른 이메일 형식이어야 합니다.</small>}
+    <div className="auth-wrap">
+      <div className="auth-card">
+        <div className="auth-brand">
+          <span className="nav-logo">🤝</span>
+          <h1>TeamUp</h1>
+          <p>기술 스택을 넘어 협업 스타일까지 맞는 팀을 만나보세요</p>
         </div>
 
-        {/* 비밀번호 입력 및 가이드 규약 */}
-        <div>
-          <label style={{ fontWeight: 'bold' }}>비밀번호</label><br />
-          <input type="password" placeholder="비밀번호 입력" value={password} onChange={e => setPassword(e.target.value)} style={{ width: '100%', padding: '8px', marginTop: '5px' }} required />
-          {isSignUp && <small style={{ color: '#d9534f', fontWeight: 'bold', display: 'block', marginTop: '3px' }}>⚠️ 필수 규약: 안전을 위해 반드시 "8글자 이상"으로 작성해 주세요.</small>}
+        {/* 로그인 / 회원가입 토글 */}
+        <div className="auth-tabs">
+          <button
+            className={`auth-tab ${!isSignUp ? 'active' : ''}`}
+            onClick={() => setIsSignUp(false)}
+            type="button"
+          >
+            로그인
+          </button>
+          <button
+            className={`auth-tab ${isSignUp ? 'active' : ''}`}
+            onClick={() => setIsSignUp(true)}
+            type="button"
+          >
+            회원가입
+          </button>
         </div>
 
-        {/* 이름 입력 및 가이드 규약 */}
-        {isSignUp && (
-          <div>
-            <label style={{ fontWeight: 'bold' }}>이름 (본명)</label><br />
-            <input type="text" placeholder="홍길동" value={name} onChange={e => setName(e.target.value)} style={{ width: '100%', padding: '8px', marginTop: '5px' }} required />
-            <small style={{ color: '#666', display: 'block', marginTop: '3px' }}>💡 10글자 이내의 한글/영문 본명을 입력해 주세요.</small>
+        <form onSubmit={handleSubmit} className="form">
+          <div className="form-group">
+            <label className="label">이메일 주소</label>
+            <input
+              type="email" className="input" placeholder="example@knu.ac.kr"
+              value={email} onChange={e => setEmail(e.target.value)} required
+            />
+            {isSignUp && <span className="hint">💡 학교 인증이 가능한 올바른 이메일 형식이어야 합니다.</span>}
           </div>
-        )}
 
-        <button type="submit" style={{ padding: '10px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>
-          {isSignUp ? '가입 신청하기' : '로그인'}
-        </button>
-      </form>
+          <div className="form-group">
+            <label className="label">비밀번호</label>
+            <input
+              type="password" className="input" placeholder="비밀번호 입력"
+              value={password} onChange={e => setPassword(e.target.value)} required
+            />
+            {isSignUp && <span className="hint-warn">⚠️ 안전을 위해 반드시 8글자 이상으로 작성해 주세요.</span>}
+          </div>
 
-      <hr style={{ margin: '20px 0', border: '0', borderTop: '1px solid #eee' }} />
+          {isSignUp && (
+            <div className="form-group">
+              <label className="label">이름 (본명)</label>
+              <input
+                type="text" className="input" placeholder="홍길동"
+                value={name} onChange={e => setName(e.target.value)} required
+              />
+              <span className="hint">💡 10글자 이내의 한글/영문 본명을 입력해 주세요.</span>
+            </div>
+          )}
 
-      <button onClick={() => setIsSignUp(!isSignUp)} style={{ width: '100%', padding: '8px', backgroundColor: '#fff', border: '1px solid #ccc', borderRadius: '5px', cursor: 'pointer' }}>
-        {isSignUp ? '이미 계정이 있으신가요? 로그인하기' : '플랫폼이 처음이신가요? 회원가입하기'}
-      </button>
+          <button type="submit" className="btn btn-primary btn-block" style={{ marginTop: 4 }}>
+            {isSignUp ? '가입 신청하기' : '로그인'}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
